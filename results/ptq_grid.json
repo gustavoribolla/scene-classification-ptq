@@ -1,0 +1,103 @@
+{
+  "mode": "smoke",
+  "quant_backend": "qnnpack",
+  "baseline": {
+    "num_samples": 512.0,
+    "top1": 0.00390625,
+    "top5": 0.0078125,
+    "avg_latency_ms_per_image": 82.30718733983622,
+    "total_eval_seconds": 42.141279917996144,
+    "model_size_mb": 97.79505062103271,
+    "mode": "smoke"
+  },
+  "runs": [
+    {
+      "weight_mode": "per_tensor",
+      "calibration_batches": 10,
+      "top1": 0.0,
+      "top5": 0.0,
+      "avg_latency_ms_per_image": 24.562234375025582,
+      "model_size_mb": 24.50513744354248,
+      "delta_top1_vs_fp32": 0.00390625,
+      "size_ratio_vs_fp32": 3.990797882539662,
+      "speedup_vs_fp32": 3.3509649848274643
+    },
+    {
+      "weight_mode": "per_tensor",
+      "calibration_batches": 50,
+      "top1": 0.0,
+      "top5": 0.0,
+      "avg_latency_ms_per_image": 24.814062499899592,
+      "model_size_mb": 24.50513744354248,
+      "delta_top1_vs_fp32": 0.00390625,
+      "size_ratio_vs_fp32": 3.990797882539662,
+      "speedup_vs_fp32": 3.316957364001532
+    },
+    {
+      "weight_mode": "per_tensor",
+      "calibration_batches": 100,
+      "top1": 0.0,
+      "top5": 0.0,
+      "avg_latency_ms_per_image": 25.23919531267893,
+      "model_size_mb": 24.50538158416748,
+      "delta_top1_vs_fp32": 0.00390625,
+      "size_ratio_vs_fp32": 3.9907581232775606,
+      "speedup_vs_fp32": 3.2610860338518455
+    },
+    {
+      "weight_mode": "per_tensor",
+      "calibration_batches": 500,
+      "top1": 0.0,
+      "top5": 0.0,
+      "avg_latency_ms_per_image": 30.13915625001573,
+      "model_size_mb": 24.50538158416748,
+      "delta_top1_vs_fp32": 0.00390625,
+      "size_ratio_vs_fp32": 3.9907581232775606,
+      "speedup_vs_fp32": 2.7309054924121594
+    },
+    {
+      "weight_mode": "per_channel",
+      "calibration_batches": 10,
+      "top1": 0.0,
+      "top5": 0.0,
+      "avg_latency_ms_per_image": 26.590736999878573,
+      "model_size_mb": 24.954272270202637,
+      "delta_top1_vs_fp32": 0.00390625,
+      "size_ratio_vs_fp32": 3.9189702493471508,
+      "speedup_vs_fp32": 3.0953330605395433
+    },
+    {
+      "weight_mode": "per_channel",
+      "calibration_batches": 50,
+      "top1": 0.0,
+      "top5": 0.0,
+      "avg_latency_ms_per_image": 27.328140624831576,
+      "model_size_mb": 24.954272270202637,
+      "delta_top1_vs_fp32": 0.00390625,
+      "size_ratio_vs_fp32": 3.9189702493471508,
+      "speedup_vs_fp32": 3.011810736404372
+    },
+    {
+      "weight_mode": "per_channel",
+      "calibration_batches": 100,
+      "top1": 0.0,
+      "top5": 0.0,
+      "avg_latency_ms_per_image": 27.160190124959627,
+      "model_size_mb": 24.95461940765381,
+      "delta_top1_vs_fp32": 0.00390625,
+      "size_ratio_vs_fp32": 3.9189157335350138,
+      "speedup_vs_fp32": 3.0304348740253366
+    },
+    {
+      "weight_mode": "per_channel",
+      "calibration_batches": 500,
+      "top1": 0.0,
+      "top5": 0.0,
+      "avg_latency_ms_per_image": 26.14250518740846,
+      "model_size_mb": 24.95461940765381,
+      "delta_top1_vs_fp32": 0.00390625,
+      "size_ratio_vs_fp32": 3.9189157335350138,
+      "speedup_vs_fp32": 3.1484047435315987
+    }
+  ]
+}
