@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Optional
 
-from torch.utils.data import DataLoader, Subset
+from torch.utils.data import DataLoader, Dataset, Subset
 from torchvision import datasets, transforms
 
 
@@ -28,6 +28,29 @@ def build_imagefolder(split_dir: Path, image_size: int = 256, crop_size: int = 2
     return datasets.ImageFolder(root=str(split_dir), transform=build_eval_transform(image_size, crop_size))
 
 
+def build_places365(
+    root: str,
+    split: str = "val",
+    small: bool = True,
+    image_size: int = 256,
+    crop_size: int = 224,
+    download: bool = False,
+) -> datasets.Places365:
+    """Load the official Places365 dataset via torchvision.
+
+    The torchvision loader handles the flat directory layout and the
+    label file automatically, so there is no need for ImageFolder sub-
+    directories.
+    """
+    return datasets.Places365(
+        root=root,
+        split=split,
+        small=small,
+        download=download,
+        transform=build_eval_transform(image_size, crop_size),
+    )
+
+
 def build_fake_places365(
     num_samples: int,
     image_size: int = 256,
@@ -50,7 +73,7 @@ def build_fake_places365(
 
 
 def make_loader(
-    dataset: datasets.ImageFolder,
+    dataset: Dataset,
     batch_size: int,
     num_workers: int,
     max_samples: Optional[int] = None,

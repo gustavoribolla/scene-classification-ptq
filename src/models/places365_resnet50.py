@@ -9,7 +9,7 @@ from torchvision.models import ResNet50_Weights, resnet50
 
 
 def _load_local_checkpoint(model: nn.Module, checkpoint_path: str) -> nn.Module:
-    ckpt = torch.load(checkpoint_path, map_location="cpu")
+    ckpt = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
     if isinstance(ckpt, dict) and "state_dict" in ckpt:
         state_dict = ckpt["state_dict"]
     else:
@@ -27,11 +27,18 @@ def _load_local_checkpoint(model: nn.Module, checkpoint_path: str) -> nn.Module:
 def load_resnet50(
     weights_source: Literal["torchvision", "local"] = "torchvision",
     local_weights: Optional[str] = None,
+    num_classes: int = 365,
 ) -> nn.Module:
+    """Load a ResNet-50 model with Places365 or ImageNet weights.
+
+    When ``weights_source='local'``, the architecture is created with
+    ``num_classes`` output units (default 365 for Places365) so that the
+    checkpoint's FC layer matches.
+    """
     if weights_source == "torchvision":
         model = resnet50(weights=ResNet50_Weights.IMAGENET1K_V2)
     else:
-        model = resnet50(weights=None)
+        model = resnet50(weights=None, num_classes=num_classes)
         if not local_weights:
             raise ValueError("local_weights path is required when weights_source='local'")
         path = Path(local_weights)

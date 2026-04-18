@@ -8,7 +8,7 @@ from typing import Any, Dict, List
 import torch
 
 from src.config import ProjectConfig, ensure_results_dir
-from src.data.places365 import build_fake_places365, build_imagefolder, make_loader
+from src.data.places365 import build_fake_places365, build_places365, make_loader
 from src.eval.metrics import evaluate_model, serialized_model_size_mb
 from src.models.places365_resnet50 import load_resnet50
 from src.quant.ptq_static import (
@@ -19,14 +19,22 @@ from src.quant.ptq_static import (
     prepare_static_ptq,
 )
 
+# Default paths (relative to project root)
+_PROJECT_ROOT = Path(__file__).resolve().parents[2]
+_DEFAULT_WEIGHTS = str(_PROJECT_ROOT / "resnet50_places365.pth.tar")
+_DEFAULT_DATA_ROOT = str(_PROJECT_ROOT / "places365_data")
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run static PTQ ablations")
     parser.add_argument("--smoke", action="store_true", help="Use small subsets for quick validation")
     parser.add_argument("--smoke-calib-samples", type=int, default=512)
     parser.add_argument("--smoke-test-samples", type=int, default=512)
-    parser.add_argument("--weights-source", choices=["torchvision", "local"], default="torchvision")
-    parser.add_argument("--local-weights", type=str, default=None)
+    parser.add_argument("--weights-source", choices=["torchvision", "local"], default="local")
+    parser.add_argument("--local-weights", type=str, default=_DEFAULT_WEIGHTS)
+    parser.add_argument("--num-classes", type=int, default=365, help="Number of output classes (365 for Places365)")
+    parser.add_argument("--data-root", type=str, default=_DEFAULT_DATA_ROOT,
+                        help="Root directory for Places365 dataset (torchvision format)")
     return parser.parse_args()
 
 
@@ -74,27 +82,45 @@ def main() -> None:
     torch.backends.quantized.engine = backend
     print(f"Using quantization backend: {backend}")
 
-    fp32_model = load_resnet50(weights_source=args.weights_source, local_weights=args.local_weights)
+    fp32_model = load_resnet50(
+        weights_source=args.weights_source,
+        local_weights=args.local_weights,
+        num_classes=args.num_classes,
+    )
 
-    if args.smoke and not cfg.val_dir.exists():
-        print("[info] Validation split not found, using FakeData in smoke mode.")
+    data_root = Path(args.data_root)
+    use_real_data = data_root.exists() and (data_root / "val_256").exists()
+
+    if use_real_data:
+        print(f"[info] Using real Places365 data from {data_root}")
+        # Use val split for both calibration and evaluation
+        val_dataset = build_places365(
+            root=str(data_root),
+            split="val",
+            small=True,
+            image_size=cfg.image_size,
+            crop_size=cfg.crop_size,
+        )
+        test_dataset = val_dataset
+    elif args.smoke:
+        print("[info] Places365 data not found, using FakeData in smoke mode.")
         val_dataset = build_fake_places365(
             num_samples=args.smoke_calib_samples,
             image_size=cfg.image_size,
             crop_size=cfg.crop_size,
+            num_classes=args.num_classes,
         )
-    else:
-        val_dataset = build_imagefolder(cfg.val_dir, image_size=cfg.image_size, crop_size=cfg.crop_size)
-
-    if args.smoke and not cfg.test_dir.exists():
-        print("[info] Test split not found, using FakeData in smoke mode.")
         test_dataset = build_fake_places365(
             num_samples=args.smoke_test_samples,
             image_size=cfg.image_size,
             crop_size=cfg.crop_size,
+            num_classes=args.num_classes,
         )
     else:
-        test_dataset = build_imagefolder(cfg.test_dir, image_size=cfg.image_size, crop_size=cfg.crop_size)
+        raise FileNotFoundError(
+            f"Places365 data not found at {data_root}. "
+            "Use --smoke for synthetic data or --data-root to specify the data directory."
+        )
 
     val_loader = make_loader(
         val_dataset,
