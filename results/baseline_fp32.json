@@ -1,9 +1,9 @@
 {
-  "num_samples": 512.0,
-  "top1": 0.001953125,
-  "top5": 0.01171875,
-  "avg_latency_ms_per_image": 75.0139070624698,
-  "total_eval_seconds": 38.40712041598454,
+  "num_samples": 36500.0,
+  "top1": 0.546082191780822,
+  "top5": 0.8494794520547945,
+  "avg_latency_ms_per_image": 26.98284775616464,
+  "total_eval_seconds": 984.8739431000095,
   "model_size_mb": 92.83173274993896,
-  "mode": "smoke"
+  "mode": "full"
 }

@@ -6,8 +6,14 @@ from pathlib import Path
 
 from src.config import ProjectConfig, ensure_results_dir
 from src.data.places365 import build_fake_places365, build_places365, make_loader
-from src.eval.metrics import evaluate_model, serialized_model_size_mb
 from src.models.places365_resnet50 import load_resnet50
+
+from src.eval.metrics import (
+    evaluate_model_with_confusion_matrix,
+    plot_confusion_matrix,
+    save_confusion_matrix_csv,
+    serialized_model_size_mb,
+)
 
 # Default checkpoint path (relative to project root)
 _PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -71,7 +77,13 @@ def main() -> None:
         max_samples=args.smoke_samples if args.smoke else None,
     )
 
-    metrics = evaluate_model(model, test_loader, device=cfg.device, desc="fp32-test")
+    metrics, confusion = evaluate_model_with_confusion_matrix(
+        model,
+        test_loader,
+        num_classes=args.num_classes,
+        device=cfg.device,
+        desc="fp32-test",
+    )
     size_path = cfg.results_dir / "tmp_fp32_state_dict.pt"
     metrics["model_size_mb"] = serialized_model_size_mb(model, size_path)
     size_path.unlink(missing_ok=True)
@@ -79,6 +91,16 @@ def main() -> None:
 
     output_path = cfg.results_dir / "baseline_fp32.json"
     output_path.write_text(json.dumps(metrics, indent=2), encoding="utf-8")
+
+    conf_csv_path = cfg.results_dir / "baseline_confusion_matrix.csv"
+    conf_png_path = cfg.results_dir / "baseline_confusion_matrix.png"
+
+    save_confusion_matrix_csv(confusion, conf_csv_path)
+    plot_confusion_matrix(confusion, conf_png_path)
+
+    print(f"Saved confusion matrix CSV to {conf_csv_path}")
+    print(f"Saved confusion matrix image to {conf_png_path}")
+
     print(f"Saved baseline metrics to {output_path}")
 
 

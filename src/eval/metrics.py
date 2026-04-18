@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import csv
 import time
 from pathlib import Path
 from typing import Dict
 
+import matplotlib.pyplot as plt
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
@@ -55,6 +57,74 @@ def evaluate_model(model: nn.Module, loader: DataLoader, device: str = "cpu", de
         "avg_latency_ms_per_image": avg_latency_ms,
         "total_eval_seconds": elapsed,
     }
+
+
+def evaluate_model_with_confusion_matrix(
+    model: nn.Module,
+    loader: DataLoader,
+    num_classes: int,
+    device: str = "cpu",
+    desc: str = "eval",
+):
+    model.to(device)
+    model.eval()
+
+    n_samples = 0
+    top1 = 0.0
+    top5 = 0.0
+    elapsed = 0.0
+    confusion = torch.zeros((num_classes, num_classes), dtype=torch.int64)
+
+    with torch.inference_mode():
+        for images, labels in tqdm(loader, desc=desc):
+            images = images.to(device)
+            labels = labels.to(device)
+
+            start = time.perf_counter()
+            logits = model(images)
+            elapsed += time.perf_counter() - start
+
+            preds = torch.argmax(logits, dim=1)
+
+            b_top1, b_top5 = _accuracy_topk(logits, labels, topk=(1, 5))
+            bs = labels.size(0)
+            n_samples += bs
+            top1 += b_top1
+            top5 += b_top5
+
+            for true_label, pred_label in zip(labels.view(-1), preds.view(-1)):
+                confusion[true_label.long(), pred_label.long()] += 1
+
+    avg_latency_ms = (elapsed / max(n_samples, 1)) * 1000.0
+    metrics = {
+        "num_samples": float(n_samples),
+        "top1": top1 / max(n_samples, 1),
+        "top5": top5 / max(n_samples, 1),
+        "avg_latency_ms_per_image": avg_latency_ms,
+        "total_eval_seconds": elapsed,
+    }
+    return metrics, confusion
+
+
+def save_confusion_matrix_csv(confusion: torch.Tensor, path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerows(confusion.cpu().numpy().tolist())
+
+
+def plot_confusion_matrix(confusion: torch.Tensor, path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    plt.figure(figsize=(10, 8))
+    plt.imshow(confusion.cpu().numpy(), interpolation="nearest")
+    plt.title("Confusion Matrix")
+    plt.xlabel("Predicted label")
+    plt.ylabel("True label")
+    plt.colorbar()
+    plt.tight_layout()
+    plt.savefig(path, dpi=200)
+    plt.close()
 
 
 def serialized_model_size_mb(model: nn.Module, path: Path) -> float:
