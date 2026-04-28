@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
+from typing import Literal, Optional
 
 from torch.utils.data import DataLoader, Dataset, Subset
 from torchvision import datasets, transforms
@@ -48,6 +48,46 @@ def build_places365(
         small=small,
         download=download,
         transform=build_eval_transform(image_size, crop_size),
+    )
+
+
+def build_eval_dataset(
+    root: str,
+    split: Literal["val", "test"] = "val",
+    image_size: int = 256,
+    crop_size: int = 224,
+    download: bool = False,
+) -> tuple[Dataset, str]:
+    """Build a real evaluation dataset from common Places365 layouts.
+
+    Supported layouts:
+    - ``root/val`` or ``root/test`` as class-folder ImageFolder splits.
+    - Official torchvision Places365 layout under ``root``.
+    """
+    data_root = Path(root)
+    split_dir = data_root / split
+    if split_dir.exists():
+        dataset = build_imagefolder(split_dir, image_size=image_size, crop_size=crop_size)
+        return dataset, f"imagefolder:{split_dir}"
+
+    dataset = build_places365(
+        root=str(data_root),
+        split=split,
+        small=True,
+        image_size=image_size,
+        crop_size=crop_size,
+        download=download,
+    )
+    return dataset, f"torchvision-places365:{data_root}:{split}"
+
+
+def has_real_places365_data(root: str, split: Literal["val", "test"] = "val") -> bool:
+    data_root = Path(root)
+    return (
+        (data_root / split).exists()
+        or (data_root / "val_256").exists()
+        or (data_root / "data_256").exists()
+        or (data_root / "places365standard_easyformat").exists()
     )
 
 

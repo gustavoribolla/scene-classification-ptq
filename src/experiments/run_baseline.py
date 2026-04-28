@@ -2,10 +2,16 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
 
 from src.config import ProjectConfig, ensure_results_dir
-from src.data.places365 import build_fake_places365, build_places365, make_loader
+from src.data.places365 import (
+    build_eval_dataset,
+    build_fake_places365,
+    has_real_places365_data,
+    make_loader,
+)
 from src.models.places365_resnet50 import load_resnet50
 
 from src.eval.metrics import (
@@ -18,7 +24,7 @@ from src.eval.metrics import (
 # Default checkpoint path (relative to project root)
 _PROJECT_ROOT = Path(__file__).resolve().parents[2]
 _DEFAULT_WEIGHTS = str(_PROJECT_ROOT / "resnet50_places365.pth.tar")
-_DEFAULT_DATA_ROOT = str(_PROJECT_ROOT / "places365_data")
+_DEFAULT_DATA_ROOT = os.getenv("PLACES365_ROOT", str(_PROJECT_ROOT / "places365_data"))
 
 
 def parse_args() -> argparse.Namespace:
@@ -30,12 +36,17 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--num-classes", type=int, default=365, help="Number of output classes (365 for Places365)")
     parser.add_argument("--data-root", type=str, default=_DEFAULT_DATA_ROOT,
                         help="Root directory for Places365 dataset (torchvision format)")
+    parser.add_argument("--results-dir", type=str, default=None, help="Directory for output artifacts")
+    parser.add_argument("--batch-size", type=int, default=None, help="Override configured batch size")
+    parser.add_argument("--num-workers", type=int, default=None, help="Override configured DataLoader workers")
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
     cfg = ProjectConfig()
+    if args.results_dir:
+        cfg.results_dir = Path(args.results_dir)
     ensure_results_dir(cfg)
 
     model = load_resnet50(
@@ -45,14 +56,13 @@ def main() -> None:
     )
 
     data_root = Path(args.data_root)
-    use_real_data = data_root.exists() and (data_root / "val_256").exists()
+    use_real_data = data_root.exists() and has_real_places365_data(str(data_root), split="val")
 
     if use_real_data:
         print(f"[info] Using real Places365 data from {data_root}")
-        test_dataset = build_places365(
+        test_dataset, dataset_source = build_eval_dataset(
             root=str(data_root),
             split="val",
-            small=True,
             image_size=cfg.image_size,
             crop_size=cfg.crop_size,
         )
@@ -64,6 +74,7 @@ def main() -> None:
             crop_size=cfg.crop_size,
             num_classes=args.num_classes,
         )
+        dataset_source = "fake-data"
     else:
         raise FileNotFoundError(
             f"Places365 data not found at {data_root}. "
@@ -72,8 +83,8 @@ def main() -> None:
 
     test_loader = make_loader(
         test_dataset,
-        batch_size=cfg.batch_size,
-        num_workers=cfg.num_workers,
+        batch_size=args.batch_size or cfg.batch_size,
+        num_workers=cfg.num_workers if args.num_workers is None else args.num_workers,
         max_samples=args.smoke_samples if args.smoke else None,
     )
 
@@ -88,6 +99,7 @@ def main() -> None:
     metrics["model_size_mb"] = serialized_model_size_mb(model, size_path)
     size_path.unlink(missing_ok=True)
     metrics["mode"] = "smoke" if args.smoke else "full"
+    metrics["dataset_source"] = dataset_source
 
     output_path = cfg.results_dir / "baseline_fp32.json"
     output_path.write_text(json.dumps(metrics, indent=2), encoding="utf-8")

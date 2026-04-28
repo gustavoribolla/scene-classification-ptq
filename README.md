@@ -34,6 +34,9 @@ PLACES365_ROOT/
     class_b/*.jpg
 ```
 
+The scripts also accept the official torchvision Places365 directory layout
+when `PLACES365_ROOT` points to the dataset root.
+
 You can override split directories with:
 - `PLACES365_VAL_DIR`
 - `PLACES365_TEST_DIR`
@@ -43,13 +46,13 @@ You can override split directories with:
 Smoke run (synthetic data, uses real model weights):
 
 ```bash
-python -m src.experiments.run_baseline --smoke
+python3 -m src.experiments.run_baseline --smoke
 ```
 
 Normal run (requires Places365 dataset):
 
 ```bash
-python -m src.experiments.run_baseline
+python3 -m src.experiments.run_baseline
 ```
 
 ## 5) Run PTQ grid
@@ -57,21 +60,34 @@ python -m src.experiments.run_baseline
 Smoke run:
 
 ```bash
-python -m src.experiments.run_ptq_grid --smoke
+python3 -m src.experiments.run_ptq_grid --smoke
 ```
 
 Normal run:
 
 ```bash
-python -m src.experiments.run_ptq_grid
+python3 -m src.experiments.run_ptq_grid
+```
+
+Fast implementation check:
+
+```bash
+python3 -m src.experiments.run_ptq_grid --smoke \
+  --smoke-calib-samples 8 \
+  --smoke-test-samples 8 \
+  --calibration-batches 1 \
+  --weight-modes per_tensor \
+  --batch-size 4 \
+  --num-workers 0 \
+  --results-dir /tmp/scene-classification-ptq-smoke
 ```
 
 ## 6) Outputs
 
 All artifacts are saved under `results/`:
 - `baseline_fp32.json`
-- `ptq_grid.json`
-- `report.md`
+- `ptq_grid.json`: FP32 baseline, INT8 runs, calibration statistics, size ratio, latency speedup, and Top-1/Top-5 loss.
+- `report.md`: concise FP32 vs INT8 comparison and preliminary accuracy-loss analysis.
 
 ## Notes
 
@@ -80,4 +96,3 @@ All artifacts are saved under `results/`:
 - In `--smoke` mode, if `PLACES365` folders are missing, scripts automatically use synthetic data to validate the pipeline.
 - The default weights source is `local` pointing to `resnet50_places365.pth.tar` (365 output classes).
 - You can override with `--weights-source torchvision` to use ImageNet-pretrained weights (1000 classes).
-
