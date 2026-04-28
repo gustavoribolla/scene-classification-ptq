@@ -1,0 +1,12 @@
+{
+  "quantized_model_path": "results/quantized_demo/places365_resnet50_int8_torchscript.pt",
+  "quant_backend": "qnnpack",
+  "weight_mode": "per_channel",
+  "data_root": "/Users/queca/Library/Mobile Documents/com~apple~CloudDocs/cv project/scene-classification-ptq_old/places365_data",
+  "calibration": {
+    "requested_batches": 100,
+    "observed_batches": 100,
+    "observed_samples": 3200,
+    "elapsed_seconds": 254.4224799159856
+  }
+}

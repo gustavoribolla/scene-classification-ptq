@@ -1,0 +1,35 @@
+{
+  "mode": "full",
+  "quant_backend": "qnnpack",
+  "dataset_source": "torchvision-places365:/Users/queca/Library/Mobile Documents/com~apple~CloudDocs/cv project/scene-classification-ptq_old/places365_data:val",
+  "baseline_source": "inline",
+  "baseline": {
+    "num_samples": 36500.0,
+    "top1": 0.546082191780822,
+    "top5": 0.8494794520547945,
+    "avg_latency_ms_per_image": 67.15354417221643,
+    "total_eval_seconds": 2451.1043622858997,
+    "model_size_mb": 92.83173274993896,
+    "mode": "full",
+    "dataset_source": "torchvision-places365:/Users/queca/Library/Mobile Documents/com~apple~CloudDocs/cv project/scene-classification-ptq_old/places365_data:val"
+  },
+  "runs": [
+    {
+      "weight_mode": "per_channel",
+      "calibration_batches": 100,
+      "top1": 0.5454520547945205,
+      "top5": 0.8490958904109589,
+      "avg_latency_ms_per_image": 21.307963891355925,
+      "model_size_mb": 23.70223903656006,
+      "calibration_samples": 6400,
+      "calibration_observed_batches": 100,
+      "calibration_seconds": 515.9086436660145,
+      "delta_top1_vs_fp32": 0.0006301369863014328,
+      "delta_top5_vs_fp32": 0.0003835616438355727,
+      "accuracy_loss_top1_pp": 0.06301369863014328,
+      "accuracy_loss_top5_pp": 0.03835616438355727,
+      "size_ratio_vs_fp32": 3.9165807334382436,
+      "speedup_vs_fp32": 3.151570207018177
+    }
+  ]
+}

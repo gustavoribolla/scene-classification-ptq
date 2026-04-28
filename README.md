@@ -89,6 +89,26 @@ All artifacts are saved under `results/`:
 - `ptq_grid.json`: FP32 baseline, INT8 runs, calibration statistics, size ratio, latency speedup, and Top-1/Top-5 loss.
 - `report.md`: concise FP32 vs INT8 comparison and preliminary accuracy-loss analysis.
 
+## 7) Tangible INT8 demo
+
+Build one quantized INT8 model and classify real Places365 validation images:
+
+```bash
+./run_quantized_demo.sh
+```
+
+Outputs are saved under `results/quantized_demo/`:
+- `places365_resnet50_int8_torchscript.pt`: saved executable INT8 model artifact.
+- `quantized_model_metadata.json`: backend, weight mode, dataset path, and calibration stats.
+- `predictions.json`: raw Top-5 predictions for the demo images.
+- `demo_report.md`: readable report to show the quantized model classifying environments.
+
+Quick check with less calibration:
+
+```bash
+./run_quantized_demo.sh --calibration-batches 10 --batch-size 16 --results-dir /tmp/quantized_demo_check
+```
+
 ## Notes
 
 - This bootstrap uses static PTQ from `torch.ao.quantization`.
