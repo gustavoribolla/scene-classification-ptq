@@ -2,27 +2,36 @@
 
 Bootstrap project to evaluate FP32 vs static INT8 PTQ for `ResNet50-Places365` on CPU.
 
+---
+
 ## 1) Environment
 
 ```bash
 python3 -m venv .venv
-source .venv/bin/activate
+source .venv/bin/activate   # Linux/Mac
+.venv\Scripts\activate      # Windows
+
 pip install --upgrade pip
 pip install -r requirements.txt
-```
+````
+
+---
 
 ## 2) Model weights
 
 The project uses the **official PyTorch Places365 checkpoint** (`resnet50_places365.pth.tar`)
-which must be placed at the project root. This file is automatically used by default.
+which must be placed at the project root.
 
-> **Note:** The `.t7` file (`resnet50_places365.t7`) is a legacy **Torch7 (Lua)** format
-> and cannot be loaded by PyTorch. Use the `.pth.tar` version from
-> [http://places2.csail.mit.edu/models_places365/](http://places2.csail.mit.edu/models_places365/)
+> **Note:** The `.t7` file is a legacy Torch7 format and is not supported by PyTorch.
+
+Download:
+[http://places2.csail.mit.edu/models_places365/](http://places2.csail.mit.edu/models_places365/)
+
+---
 
 ## 3) Dataset layout
 
-Set `PLACES365_ROOT` to your local Places365 directory. Expected structure:
+Set `PLACES365_ROOT` to your local dataset directory:
 
 ```text
 PLACES365_ROOT/
@@ -34,45 +43,47 @@ PLACES365_ROOT/
     class_b/*.jpg
 ```
 
-The scripts also accept the official torchvision Places365 directory layout
-when `PLACES365_ROOT` points to the dataset root.
+Environment variables (optional):
 
-You can override split directories with:
-- `PLACES365_VAL_DIR`
-- `PLACES365_TEST_DIR`
+* `PLACES365_VAL_DIR`
+* `PLACES365_TEST_DIR`
+
+---
 
 ## 4) Run baseline FP32
 
-Smoke run (synthetic data, uses real model weights):
+Smoke test:
 
 ```bash
-python3 -m src.experiments.run_baseline --smoke
+python -m src.experiments.run_baseline --smoke
 ```
 
-Normal run (requires Places365 dataset):
+Full evaluation:
 
 ```bash
-python3 -m src.experiments.run_baseline
+python -m src.experiments.run_baseline
 ```
+
+---
 
 ## 5) Run PTQ grid
 
-Smoke run:
+Smoke:
 
 ```bash
-python3 -m src.experiments.run_ptq_grid --smoke
+python -m src.experiments.run_ptq_grid --smoke
 ```
 
-Normal run:
+Full:
 
 ```bash
-python3 -m src.experiments.run_ptq_grid
+python -m src.experiments.run_ptq_grid
 ```
 
-Fast implementation check:
+Fast check:
 
 ```bash
-python3 -m src.experiments.run_ptq_grid --smoke \
+python -m src.experiments.run_ptq_grid --smoke \
   --smoke-calib-samples 8 \
   --smoke-test-samples 8 \
   --calibration-batches 1 \
@@ -82,37 +93,91 @@ python3 -m src.experiments.run_ptq_grid --smoke \
   --results-dir /tmp/scene-classification-ptq-smoke
 ```
 
+---
+
 ## 6) Outputs
 
-All artifacts are saved under `results/`:
-- `baseline_fp32.json`
-- `ptq_grid.json`: FP32 baseline, INT8 runs, calibration statistics, size ratio, latency speedup, and Top-1/Top-5 loss.
-- `report.md`: concise FP32 vs INT8 comparison and preliminary accuracy-loss analysis.
+Saved in `results/`:
 
-## 7) Tangible INT8 demo
+* `baseline_fp32.json`
+* `ptq_grid.json`
+* `calibration_curve.png`
+* `baseline_confusion_matrix.png`
 
-Build one quantized INT8 model and classify real Places365 validation images:
+---
 
-```bash
-./run_quantized_demo.sh
-```
+## 7) Tangible INT8 demo (real inference)
 
-Outputs are saved under `results/quantized_demo/`:
-- `places365_resnet50_int8_torchscript.pt`: saved executable INT8 model artifact.
-- `quantized_model_metadata.json`: backend, weight mode, dataset path, and calibration stats.
-- `predictions.json`: raw Top-5 predictions for the demo images.
-- `demo_report.md`: readable report to show the quantized model classifying environments.
+Build a quantized INT8 model and classify real images.
 
-Quick check with less calibration:
+### Run demo with a test image
 
 ```bash
-./run_quantized_demo.sh --calibration-batches 10 --batch-size 16 --results-dir /tmp/quantized_demo_check
+python -m src.experiments.run_quantized_demo --image-path assets/test1.webp --rebuild
 ```
 
-## Notes
+### Input image
 
-- This bootstrap uses static PTQ from `torch.ao.quantization`.
-- Quantization backend defaults to `fbgemm` for x86 CPUs and falls back to `qnnpack`.
-- In `--smoke` mode, if `PLACES365` folders are missing, scripts automatically use synthetic data to validate the pipeline.
-- The default weights source is `local` pointing to `resnet50_places365.pth.tar` (365 output classes).
-- You can override with `--weights-source torchvision` to use ImageNet-pretrained weights (1000 classes).
+Place your test image in:
+
+```text
+assets/test1.webp
+```
+
+You can use any image (kitchen, bedroom, office, etc).
+
+---
+
+## Outputs (important)
+
+Saved in:
+
+```text
+results/quantized_demo/
+```
+
+Files:
+
+* `places365_resnet50_int8_torchscript.pt` → quantized model
+* `quantized_model_metadata.json` → calibration + backend info
+* `predictions.json` → raw predictions
+* `demo_report.md` → formatted readable output
+
+---
+
+## Example output
+
+```text
+Top-1: kitchen (80.48%)
+Top-5: kitchen, galley, restaurant kitchen, wet bar, utility room
+```
+
+---
+
+## 8) Notes
+
+* Static PTQ using `torch.ao.quantization`
+
+* Backend is **automatically selected** depending on environment:
+
+  * `fbgemm` (x86 CPUs)
+  * `qnnpack` (ARM / some builds)
+  * `onednn` (Intel / Windows builds)
+
+* In `--smoke` mode, synthetic data is used if Places365 is not available
+
+* Default weights: `resnet50_places365.pth.tar`
+
+* Optional:
+
+  ```bash
+  --weights-source torchvision
+  ```
+
+---
+
+## 9) Tips
+
+* Use clear images (e.g., kitchen) for better predictions
+* If results look wrong, try another image
+* Always use `--rebuild` when changing quantization backend
