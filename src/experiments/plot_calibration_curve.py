@@ -1,75 +1,78 @@
 import json
 import matplotlib.pyplot as plt
-import numpy as np
 from pathlib import Path
 
 def plot_calibration_curve():
     results_dir = Path("results")
-    smoke_file = results_dir / "ptq_grid.json"
     full_file = results_dir / "ptq_full_one" / "ptq_grid.json"
     baseline_file = results_dir / "baseline_fp32.json"
 
-    # Load baseline
+    # Load baseline FP32
     with open(baseline_file, "r") as f:
         baseline = json.load(f)
     baseline_top1 = baseline["top1"]
 
-    # Load smoke results (they have multiple batch sizes)
-    with open(smoke_file, "r") as f:
-        smoke_data = json.load(f)
-    
-    # Load full result (one point)
+    # Load INT8 result
     with open(full_file, "r") as f:
         full_data = json.load(f)
 
-    # Extract per_channel data from smoke (since full was per_channel)
-    batches = []
-    accuracies_smoke = []
-    for run in smoke_data["runs"]:
-        if run["weight_mode"] == "per_channel":
-            batches.append(run["calibration_batches"])
-            accuracies_smoke.append(run["top1"])
+    full_run = full_data["runs"][0]
+    full_batches = full_run["calibration_batches"]
+    full_top1 = full_run["top1"]
 
-    # Sort by batches
-    idx = np.argsort(batches)
-    batches = np.array(batches)[idx]
-    accuracies_smoke = np.array(accuracies_smoke)[idx]
+    # Compute accuracy loss
+    delta = baseline_top1 - full_top1
 
-    # The "Full" point
-    full_batches = full_data["runs"][0]["calibration_batches"]
-    full_top1 = full_data["runs"][0]["top1"]
+    # Plot
+    plt.figure(figsize=(8, 5))
 
-    plt.figure(figsize=(10, 6))
-    
-    # Plot baseline
-    plt.axhline(y=baseline_top1, color='r', linestyle='--', label=f'Baseline FP32 ({baseline_top1:.4f})')
-    
-    # Plot full result point
-    plt.scatter([full_batches], [full_top1], color='green', s=100, zorder=5, label=f'Full Eval (100 batches: {full_top1:.4f})')
-    
-    # Note: Smoke accuracy is very low because it was evaluated on 512 samples
-    # We will normalize or just explain it. 
-    # To show "flattening", we want to see accuracy vs batches.
-    
-    # Let's plot the delta or just the raw values.
-    # Since smoke accuracy is 0.0019 for all, it's already flat.
-    
-    plt.plot(batches, accuracies_smoke, 'o-', label='Smoke Eval (Constant at 0.0019)')
-    
-    plt.title('Estabilização da Acurácia vs. Batches de Calibração (PTQ)')
-    plt.xlabel('Número de Batches de Calibração (64 imgs/batch)')
-    plt.ylabel('Top-1 Accuracy')
-    plt.grid(True, linestyle=':', alpha=0.6)
+    # Baseline FP32 (linha)
+    plt.axhline(
+        y=baseline_top1,
+        color="red",
+        linestyle="--",
+        linewidth=1.5,
+        label=f"Baseline FP32 ({baseline_top1:.4f})"
+    )
+
+    # INT8 point
+    plt.scatter(
+        full_batches,
+        full_top1,
+        color="green",
+        s=120,
+        zorder=5,
+        label=f"INT8 (PTQ) ({full_batches} batches: {full_top1:.4f})"
+    )
+
+    # Texto da perda (sem seta, mais limpo)
+    plt.text(
+        full_batches + 1,
+        full_top1 - 0.002,
+        f"Δ acc: {delta:.4f}",
+        fontsize=10
+    )
+
+    # Labels e estilo
+    plt.title("Comparação de Acurácia: FP32 vs INT8 após PTQ")
+    plt.xlabel("Número de Batches de Calibração")
+    plt.ylabel("Top-1 Accuracy")
+    plt.grid(True, linestyle=":", alpha=0.6)
     plt.legend()
-    
-    # Add annotation about flattening
-    plt.annotate('Curva Achatada: Aumentar calibração\nnão altera mais a acurácia', 
-                 xy=(300, 0.002), xytext=(300, 0.1),
-                 arrowprops=dict(facecolor='black', shrink=0.05))
 
+    # Ajuste do zoom automático
+    plt.ylim(
+        min(full_top1, baseline_top1) - 0.01,
+        max(full_top1, baseline_top1) + 0.01
+    )
+
+    # Salvar imagem
     output_path = results_dir / "calibration_curve.png"
-    plt.savefig(output_path)
+    plt.savefig(output_path, dpi=300, bbox_inches="tight")
+    plt.close()
+
     print(f"Gráfico salvo em: {output_path}")
+
 
 if __name__ == "__main__":
     plot_calibration_curve()
