@@ -215,8 +215,20 @@ def main() -> None:
     quantized_model_path = cfg.results_dir / "places365_resnet50_int8_torchscript.pt"
     metadata_path = cfg.results_dir / "quantized_model_metadata.json"
 
-    backend = choose_backend()
+    supported = torch.backends.quantized.supported_engines
+    print(f"[info] Supported quantized engines: {supported}")
+
+    if "fbgemm" in supported:
+        backend = "fbgemm"
+    elif "x86" in supported:
+        backend = "x86"
+    elif "onednn" in supported:
+        backend = "onednn"
+    else:
+        raise RuntimeError(f"No supported quantized backend found. Available: {supported}")
+
     torch.backends.quantized.engine = backend
+    print(f"[info] Using quantized backend: {backend}")
 
     int8_model = None
     if quantized_model_path.exists() and not args.rebuild:
