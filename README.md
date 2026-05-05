@@ -1,6 +1,16 @@
 # PTQ Places365 Bootstrap
 
-Bootstrap project to evaluate FP32 vs static INT8 PTQ for `ResNet50-Places365` on CPU.
+Bootstrap project to evaluate FP32 vs static INT8 Post-Training Quantization (PTQ) for `ResNet50-Places365` on CPU.
+
+The project supports:
+
+- FP32 baseline evaluation
+- Static INT8 PTQ
+- Comparison between `per_tensor` and `per_channel` weight quantization
+- Experiments with different calibration sizes
+- Structured result export in JSON, CSV and Markdown
+- Automatic plots for Sprint 4 analysis
+- Real-image INT8 inference demo
 
 ---
 
@@ -19,96 +29,199 @@ pip install -r requirements.txt
 
 ## 2) Model weights
 
-The project uses the **official PyTorch Places365 checkpoint** (`resnet50_places365.pth.tar`)
-which must be placed at the project root.
+The project uses the **official PyTorch Places365 checkpoint**:
+
+```text
+resnet50_places365.pth.tar
+```
+
+This file must be placed at the project root.
 
 > **Note:** The `.t7` file is a legacy Torch7 format and is not supported by PyTorch.
 
 Download:
+
 [http://places2.csail.mit.edu/models_places365/](http://places2.csail.mit.edu/models_places365/)
 
 ---
 
 ## 3) Dataset layout
 
-Set `PLACES365_ROOT` to your local dataset directory:
+Set `PLACES365_ROOT` to your local dataset directory.
+
+Expected structure:
 
 ```text
 PLACES365_ROOT/
   val/
     class_a/*.jpg
     class_b/*.jpg
+    ...
   test/
     class_a/*.jpg
     class_b/*.jpg
+    ...
 ```
 
-Environment variables (optional):
+On Windows PowerShell:
 
+```bash
+$env:PLACES365_ROOT="C:\path\to\places365_data"
+```
+
+On Linux/Mac:
+
+```bash
+export PLACES365_ROOT="/path/to/places365_data"
+```
+
+Environment variables supported by the project:
+
+* `PLACES365_ROOT`
 * `PLACES365_VAL_DIR`
 * `PLACES365_TEST_DIR`
+
+If Places365 is not available, use `--smoke` mode to run a quick validation with synthetic data.
 
 ---
 
 ## 4) Run baseline FP32
 
+The FP32 baseline is used as the reference for accuracy, latency and model size.
+
 Smoke test:
 
 ```bash
-python -m src.experiments.run_baseline --smoke
+python -m src.experiments.run_baseline --smoke --num-workers 0
 ```
 
 Full evaluation:
 
 ```bash
-python -m src.experiments.run_baseline
+python -m src.experiments.run_baseline --num-workers 0
+```
+
+This generates:
+
+```text
+results/baseline_fp32.json
 ```
 
 ---
 
 ## 5) Run PTQ grid
 
-Smoke:
+The PTQ grid runs static INT8 quantization experiments and compares different calibration sizes and weight quantization modes.
 
-```bash
-python -m src.experiments.run_ptq_grid --smoke
-```
+### Smoke test
 
-Full:
-
-```bash
-python -m src.experiments.run_ptq_grid
-```
-
-Fast check:
+Use this to check if the pipeline is working:
 
 ```bash
 python -m src.experiments.run_ptq_grid --smoke \
-  --smoke-calib-samples 8 \
-  --smoke-test-samples 8 \
-  --calibration-batches 1 \
-  --weight-modes per_tensor \
-  --batch-size 4 \
-  --num-workers 0 \
-  --results-dir /tmp/scene-classification-ptq-smoke
+  --calibration-batches 1 2 \
+  --weight-modes per_tensor per_channel \
+  --batch-size 16 \
+  --num-workers 0
+```
+
+### Full Sprint 4 experiment
+
+Use this for the Sprint 4 results:
+
+```bash
+python -m src.experiments.run_ptq_grid \
+  --calibration-batches 1 5 10 25 50 100 \
+  --weight-modes per_tensor per_channel \
+  --batch-size 32 \
+  --num-workers 0
+```
+
+On Windows PowerShell, you can also run it in one line:
+
+```bash
+python -m src.experiments.run_ptq_grid --calibration-batches 1 5 10 25 50 100 --weight-modes per_tensor per_channel --batch-size 32 --num-workers 0
+```
+
+This tests:
+
+```text
+per_tensor  + 1, 5, 10, 25, 50, 100 calibration batches
+per_channel + 1, 5, 10, 25, 50, 100 calibration batches
 ```
 
 ---
 
-## 6) Outputs
+## 6) Generate Sprint 4 plots
 
-Saved in `results/`:
+After running the PTQ grid, generate the comparison plots:
 
-* `baseline_fp32.json`
-* `ptq_grid.json`
-* `calibration_curve.png`
-* `baseline_confusion_matrix.png`
+```bash
+python -m src.experiments.plot_ptq_grid
+```
+
+The script reads:
+
+```text
+results/ptq_grid.json
+```
+
+and saves plots into:
+
+```text
+results/
+```
+
+Generated plots:
+
+```text
+ptq_top1_vs_calibration.png
+ptq_top5_vs_calibration.png
+ptq_latency_vs_calibration.png
+ptq_speedup_vs_calibration.png
+ptq_accuracy_loss_vs_calibration.png
+```
 
 ---
 
-## 7) Tangible INT8 demo (real inference)
+## 7) Sprint 4 outputs
 
-Build a quantized INT8 model and classify real images.
+Saved in `results/`:
+
+```text
+baseline_fp32.json
+ptq_grid.json
+ptq_grid.csv
+report.md
+ptq_top1_vs_calibration.png
+ptq_top5_vs_calibration.png
+ptq_latency_vs_calibration.png
+ptq_speedup_vs_calibration.png
+ptq_accuracy_loss_vs_calibration.png
+```
+
+### Main files
+
+* `baseline_fp32.json`
+  FP32 reference metrics.
+
+* `ptq_grid.json`
+  Complete structured PTQ experiment results.
+
+* `ptq_grid.csv`
+  Table-ready version of the PTQ results.
+
+* `report.md`
+  Automatic Markdown report with baseline, PTQ table and preliminary analysis.
+
+* `ptq_*.png`
+  Graphs comparing calibration size, accuracy, latency and speedup.
+
+---
+
+## 8) Tangible INT8 demo: real inference
+
+Build a quantized INT8 model and classify a real image.
 
 ### Run demo with a test image
 
@@ -124,11 +237,11 @@ Place your test image in:
 assets/test1.webp
 ```
 
-You can use any image (kitchen, bedroom, office, etc).
+You can use any indoor image, such as kitchen, bedroom, office or living room.
 
 ---
 
-## Outputs (important)
+## 9) Demo outputs
 
 Saved in:
 
@@ -138,14 +251,14 @@ results/quantized_demo/
 
 Files:
 
-* `places365_resnet50_int8_torchscript.pt` → quantized model
-* `quantized_model_metadata.json` → calibration + backend info
-* `predictions.json` → raw predictions
-* `demo_report.md` → formatted readable output
+```text
+places365_resnet50_int8_torchscript.pt
+quantized_model_metadata.json
+predictions.json
+demo_report.md
+```
 
----
-
-## Example output
+### Example output
 
 ```text
 Top-1: kitchen (80.48%)
@@ -154,30 +267,34 @@ Top-5: kitchen, galley, restaurant kitchen, wet bar, utility room
 
 ---
 
-## 8) Notes
+## 10) Notes
 
-* Static PTQ using `torch.ao.quantization`
+* Static PTQ uses `torch.ao.quantization`.
+* Quantization backend is automatically selected depending on the environment:
 
-* Backend is **automatically selected** depending on environment:
+  * `fbgemm` for x86 CPUs
+  * `qnnpack` for ARM or some builds
+  * `onednn` for Intel / Windows builds
+* In `--smoke` mode, synthetic data is used if Places365 is not available.
+* Default weights file:
 
-  * `fbgemm` (x86 CPUs)
-  * `qnnpack` (ARM / some builds)
-  * `onednn` (Intel / Windows builds)
+```text
+resnet50_places365.pth.tar
+```
 
-* In `--smoke` mode, synthetic data is used if Places365 is not available
+Optional model source:
 
-* Default weights: `resnet50_places365.pth.tar`
-
-* Optional:
-
-  ```bash
-  --weights-source torchvision
-  ```
+```bash
+--weights-source torchvision
+```
 
 ---
 
-## 9) Tips
+## 11) Tips
 
-* Use clear images (e.g., kitchen) for better predictions
-* If results look wrong, try another image
-* Always use `--rebuild` when changing quantization backend
+* Use `--smoke` first to check if the pipeline works.
+* Use `--num-workers 0` on Windows to avoid multiprocessing issues.
+* Run the FP32 baseline before the full PTQ grid.
+* Use clear indoor images for the real inference demo.
+* Always use `--rebuild` when changing the quantization backend or calibration setup.
+* The CSV and plots are the most useful files for the Sprint 4 report.

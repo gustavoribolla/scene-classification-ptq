@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 import os
 from pathlib import Path
@@ -39,8 +40,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--weights-source", choices=["torchvision", "local"], default="local")
     parser.add_argument("--local-weights", type=str, default=_DEFAULT_WEIGHTS)
     parser.add_argument("--num-classes", type=int, default=365, help="Number of output classes (365 for Places365)")
-    parser.add_argument("--data-root", type=str, default=_DEFAULT_DATA_ROOT,
-                        help="Root directory for Places365 dataset (torchvision format)")
+    parser.add_argument(
+        "--data-root",
+        type=str,
+        default=_DEFAULT_DATA_ROOT,
+        help="Root directory for Places365 dataset (torchvision format)",
+    )
     parser.add_argument("--results-dir", type=str, default=None, help="Directory for output artifacts")
     parser.add_argument(
         "--calibration-batches",
@@ -83,6 +88,7 @@ def baseline_is_compatible(
 def add_comparison_fields(row: Dict[str, Any], baseline: Dict[str, Any]) -> None:
     delta_top1 = float(baseline["top1"]) - float(row["top1"])
     delta_top5 = float(baseline["top5"]) - float(row["top5"])
+
     row["delta_top1_vs_fp32"] = delta_top1
     row["delta_top5_vs_fp32"] = delta_top5
     row["accuracy_loss_top1_pp"] = delta_top1 * 100.0
@@ -93,59 +99,118 @@ def add_comparison_fields(row: Dict[str, Any], baseline: Dict[str, Any]) -> None
     )
 
 
+def save_results_csv(results: List[Dict[str, Any]], csv_path: Path) -> None:
+    """Save PTQ grid results in a structured CSV table."""
+    fieldnames = [
+        "weight_mode",
+        "calibration_batches",
+        "calibration_samples",
+        "calibration_observed_batches",
+        "calibration_seconds",
+        "top1",
+        "top5",
+        "delta_top1_vs_fp32",
+        "delta_top5_vs_fp32",
+        "accuracy_loss_top1_pp",
+        "accuracy_loss_top5_pp",
+        "model_size_mb",
+        "avg_latency_ms_per_image",
+        "size_ratio_vs_fp32",
+        "speedup_vs_fp32",
+    ]
+
+    with csv_path.open("w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+
+        for row in results:
+            writer.writerow({key: row.get(key, "") for key in fieldnames})
+
+
 def build_report(baseline: Dict[str, Any] | None, results: List[Dict[str, Any]], report_path: Path) -> None:
-    lines = ["# PTQ Places365 Report", ""]
+    lines = [
+        "# PTQ Places365 Sprint 4 Report",
+        "",
+        "This report summarizes the Sprint 4 experiments for static Post-Training Quantization of ResNet50-Places365.",
+        "The experiments compare per-tensor and per-channel INT8 quantization under different calibration sizes.",
+        "",
+    ]
+
     if baseline:
         lines.extend(
             [
                 "## Baseline FP32",
+                "",
                 f"- Mode: {baseline.get('mode', 'unknown')}",
                 f"- Dataset: {baseline.get('dataset_source', 'unknown')}",
                 f"- Samples: {int(baseline.get('num_samples', 0))}",
-                f"- Top-1: {baseline.get('top1', 0.0):.4f}",
-                f"- Top-5: {baseline.get('top5', 0.0):.4f}",
-                f"- Avg latency (ms/img): {baseline.get('avg_latency_ms_per_image', 0.0):.4f}",
-                f"- Model size (MB): {baseline.get('model_size_mb', 0.0):.2f}",
+                f"- Top-1 Accuracy: {baseline.get('top1', 0.0):.4f}",
+                f"- Top-5 Accuracy: {baseline.get('top5', 0.0):.4f}",
+                f"- Average latency: {baseline.get('avg_latency_ms_per_image', 0.0):.4f} ms/image",
+                f"- Model size: {baseline.get('model_size_mb', 0.0):.2f} MB",
                 "",
             ]
         )
-    lines.append("## PTQ Runs")
+
+    lines.extend(
+        [
+            "## Structured PTQ Results",
+            "",
+            "| Weight mode | Calibration batches | Calibration samples | Top-1 | Top-5 | Top-1 loss (pp) | Top-5 loss (pp) | Size (MB) | Latency (ms/img) | Speedup |",
+            "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
+        ]
+    )
+
     for row in results:
-        lines.extend(
-            [
-                (
-                    f"- weight_mode={row['weight_mode']}, calib_batches={row['calibration_batches']}, "
-                    f"calib_samples={row['calibration_samples']}, "
-                    f"top1={row['top1']:.4f}, top5={row['top5']:.4f}, "
-                    f"loss_top1={row['accuracy_loss_top1_pp']:.2f} pp, "
-                    f"loss_top5={row['accuracy_loss_top5_pp']:.2f} pp, "
-                    f"size_ratio={row['size_ratio_vs_fp32']:.2f}x, "
-                    f"speedup={row['speedup_vs_fp32']:.2f}x"
-                )
-            ]
+        lines.append(
+            "| "
+            f"{row['weight_mode']} | "
+            f"{row['calibration_batches']} | "
+            f"{row['calibration_samples']} | "
+            f"{row['top1']:.4f} | "
+            f"{row['top5']:.4f} | "
+            f"{row['accuracy_loss_top1_pp']:.2f} | "
+            f"{row['accuracy_loss_top5_pp']:.2f} | "
+            f"{row['model_size_mb']:.2f} | "
+            f"{row['avg_latency_ms_per_image']:.2f} | "
+            f"{row['speedup_vs_fp32']:.2f}x |"
         )
-    if results:
-        best = min(results, key=lambda r: (r["accuracy_loss_top1_pp"], -r["speedup_vs_fp32"]))
-        lines.extend(
-            [
-                "",
-                "## Preliminary Accuracy-Loss Analysis",
-                (
-                    f"- Best Top-1 preservation: {best['weight_mode']} with "
-                    f"{best['calibration_batches']} calibration batches "
-                    f"({best['calibration_samples']} samples)."
-                ),
-                (
-                    f"- Top-1 loss: {best['accuracy_loss_top1_pp']:.2f} percentage points; "
-                    f"Top-5 loss: {best['accuracy_loss_top5_pp']:.2f} percentage points."
-                ),
-                (
-                    f"- Compression: {best['size_ratio_vs_fp32']:.2f}x smaller; "
-                    f"latency speedup: {best['speedup_vs_fp32']:.2f}x."
-                ),
-            ]
-        )
+
     lines.append("")
+
+    if results:
+        best_accuracy = min(
+            results,
+            key=lambda r: (r["accuracy_loss_top1_pp"], -r["speedup_vs_fp32"]),
+        )
+        best_speed = max(results, key=lambda r: r["speedup_vs_fp32"])
+
+        lines.extend(
+            [
+                "## Preliminary Analysis",
+                "",
+                (
+                    f"The configuration with the best Top-1 preservation was "
+                    f"`{best_accuracy['weight_mode']}` using "
+                    f"{best_accuracy['calibration_batches']} calibration batches "
+                    f"({best_accuracy['calibration_samples']} samples). "
+                    f"It achieved Top-1 accuracy of {best_accuracy['top1']:.4f}, "
+                    f"with a Top-1 loss of {best_accuracy['accuracy_loss_top1_pp']:.2f} percentage points."
+                ),
+                "",
+                (
+                    f"The fastest configuration was `{best_speed['weight_mode']}` using "
+                    f"{best_speed['calibration_batches']} calibration batches. "
+                    f"It achieved a speedup of {best_speed['speedup_vs_fp32']:.2f}x over FP32, "
+                    f"with latency of {best_speed['avg_latency_ms_per_image']:.2f} ms/image."
+                ),
+                "",
+                "Overall, these experiments allow a direct comparison between per-tensor and per-channel quantization, "
+                "showing how calibration size affects accuracy, latency, model size, and the trade-off between efficiency and predictive performance.",
+                "",
+            ]
+        )
+
     report_path.write_text("\n".join(lines), encoding="utf-8")
 
 
@@ -221,9 +286,11 @@ def main() -> None:
     baseline_path = cfg.results_dir / "baseline_fp32.json"
     baseline = load_baseline_if_exists(baseline_path)
     baseline_source = str(baseline_path)
+
     if baseline is not None and not baseline_is_compatible(baseline, mode, test_samples, dataset_source):
         print("[warn] baseline_fp32.json is incompatible with this run; computing baseline inline.")
         baseline = None
+
     if baseline is None:
         print("[warn] baseline_fp32.json not found or not reusable; computing baseline inline.")
         baseline = evaluate_model(fp32_model, test_loader, device=cfg.device, desc="fp32-test-inline")
@@ -236,6 +303,7 @@ def main() -> None:
 
     rows: List[Dict[str, Any]] = []
     calibration_batches = args.calibration_batches or cfg.calibration_batches
+
     for weight_mode in args.weight_modes:
         for calib_batches in calibration_batches:
             qconfig = build_qconfig(backend=backend, weight_mode=weight_mode)
@@ -278,10 +346,15 @@ def main() -> None:
 
     grid_path = cfg.results_dir / "ptq_grid.json"
     grid_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+    csv_path = cfg.results_dir / "ptq_grid.csv"
+    save_results_csv(rows, csv_path)
+
     report_path = cfg.results_dir / "report.md"
     build_report(baseline, rows, report_path)
 
     print(f"Saved PTQ grid to {grid_path}")
+    print(f"Saved CSV table to {csv_path}")
     print(f"Saved report to {report_path}")
 
 
