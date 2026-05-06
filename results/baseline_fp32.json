@@ -2,8 +2,10 @@
   "num_samples": 36500.0,
   "top1": 0.546082191780822,
   "top5": 0.8494794520547945,
-  "avg_latency_ms_per_image": 26.98284775616464,
-  "total_eval_seconds": 984.8739431000095,
+  "avg_latency_ms_per_image": 68.66054470549426,
+  "total_eval_seconds": 2506.109881750541,
   "model_size_mb": 92.83173274993896,
-  "mode": "full"
+  "mode": "full",
+  "dataset_source": "torchvision-places365:/Users/queca/Library/Mobile Documents/com~apple~CloudDocs/cv project/scene-classification-ptq/places365_data:val",
+  "target_class_for_binary_confusion_matrix": 0
 }
