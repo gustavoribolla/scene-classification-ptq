@@ -83,6 +83,58 @@ Environment variables supported by the project:
 
 If Places365 is not available, use `--smoke` mode to run a quick validation with synthetic data.
 
+### External validation images from QuintoAndar
+
+To collect an external real-estate validation set with labeled room photos:
+
+```bash
+python scripts/scrape_quintoandar_images.py \
+  --output-dir data/external/quintoandar \
+  --min-area 100 \
+  --max-photos 1000
+```
+
+The scraper reads public QuintoAndar listing pages, keeps only listings that are furnished and larger than 100 m², then downloads photos whose QuintoAndar subtitle maps to an environment label such as `sala`, `quarto`, `cozinha`, `banheiro`, `varanda`, or `area_servico`.
+
+Outputs:
+
+```text
+data/external/quintoandar/
+  images/<label>/*.jpg
+  manifest.csv
+  manifest.jsonl
+  summary.json
+```
+
+Useful options:
+
+```bash
+python scripts/scrape_quintoandar_images.py --dry-run --max-photos 50
+python scripts/scrape_quintoandar_images.py --image-size xxl --overwrite
+python scripts/scrape_quintoandar_images.py --search-url "https://www.quintoandar.com.br/alugar/imovel/sao-paulo-sp-brasil/mobiliado"
+python scripts/scrape_quintoandar_images.py --search-url URL_1 --search-url URL_2
+```
+
+Evaluate those images with the quantized Places365 model:
+
+```bash
+python -m src.experiments.evaluate_quintoandar_quantized
+```
+
+This writes mapped-label metrics and per-image predictions to:
+
+```text
+results/quintoandar_quantized_eval/
+  metrics.json
+  predictions.csv
+  predictions.jsonl
+  report.md
+```
+
+The evaluator maps QuintoAndar room labels to compatible Places365 categories before scoring. For example, `sala` accepts `living_room`, `dining_room`, and `television_room`; `quarto` accepts `bedroom`, `bedchamber`, and `dorm_room`; `area_servico` accepts `utility_room`, `storage_room`, and `laundromat`.
+
+The downloaded image files and generated Word summaries are local artifacts and are ignored by git. The lightweight manifests and evaluation result files can be versioned for reproducibility.
+
 ---
 
 ## 4) Run baseline FP32

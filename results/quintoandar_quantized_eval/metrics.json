@@ -1,0 +1,797 @@
+{
+  "model_path": "/Users/queca/Library/Mobile Documents/com~apple~CloudDocs/cv project/scene-classification-ptq/results/quantized_demo/places365_resnet50_int8_torchscript.pt",
+  "manifest": "/Users/queca/Library/Mobile Documents/com~apple~CloudDocs/cv project/scene-classification-ptq/data/external/quintoandar/manifest.csv",
+  "quantized_backend": "qnnpack",
+  "topk": 5,
+  "metrics": {
+    "sample_count": 810,
+    "top1_match": 428,
+    "top5_match": 637,
+    "top1_accuracy": 0.528395061728395,
+    "top5_accuracy": 0.7864197530864198,
+    "by_label": {
+      "academia": {
+        "count": 3,
+        "top1_match": 2,
+        "top5_match": 3,
+        "top1_accuracy": 0.6666666666666666,
+        "top5_accuracy": 1.0,
+        "most_common_top1_predictions": [
+          [
+            "g / gymnasium / indoor",
+            2
+          ],
+          [
+            "e / elevator lobby",
+            1
+          ]
+        ]
+      },
+      "area_externa": {
+        "count": 31,
+        "top1_match": 6,
+        "top5_match": 16,
+        "top1_accuracy": 0.1935483870967742,
+        "top5_accuracy": 0.5161290322580645,
+        "most_common_top1_predictions": [
+          [
+            "j / jacuzzi / indoor",
+            4
+          ],
+          [
+            "m / mezzanine",
+            3
+          ],
+          [
+            "b / balcony / exterior",
+            2
+          ],
+          [
+            "g / garage / outdoor",
+            2
+          ],
+          [
+            "m / medina",
+            2
+          ],
+          [
+            "d / driveway",
+            2
+          ],
+          [
+            "p / parking garage / outdoor",
+            2
+          ],
+          [
+            "a / atrium / public",
+            2
+          ],
+          [
+            "a / artists loft",
+            2
+          ],
+          [
+            "s / synagogue / outdoor",
+            2
+          ]
+        ]
+      },
+      "area_servico": {
+        "count": 39,
+        "top1_match": 7,
+        "top5_match": 22,
+        "top1_accuracy": 0.1794871794871795,
+        "top5_accuracy": 0.5641025641025641,
+        "most_common_top1_predictions": [
+          [
+            "b / bathroom",
+            8
+          ],
+          [
+            "u / utility room",
+            7
+          ],
+          [
+            "g / garage / indoor",
+            3
+          ],
+          [
+            "a / artists loft",
+            3
+          ],
+          [
+            "c / corridor",
+            3
+          ],
+          [
+            "k / kitchen",
+            3
+          ],
+          [
+            "d / dining room",
+            3
+          ],
+          [
+            "s / shower",
+            2
+          ],
+          [
+            "s / staircase",
+            1
+          ],
+          [
+            "a / alcove",
+            1
+          ]
+        ]
+      },
+      "banheiro": {
+        "count": 137,
+        "top1_match": 127,
+        "top5_match": 134,
+        "top1_accuracy": 0.927007299270073,
+        "top5_accuracy": 0.9781021897810219,
+        "most_common_top1_predictions": [
+          [
+            "b / bathroom",
+            88
+          ],
+          [
+            "s / shower",
+            39
+          ],
+          [
+            "e / elevator / door",
+            3
+          ],
+          [
+            "b / burial chamber",
+            1
+          ],
+          [
+            "j / jail cell",
+            1
+          ],
+          [
+            "c / clean room",
+            1
+          ],
+          [
+            "b / bow window / indoor",
+            1
+          ],
+          [
+            "o / operating room",
+            1
+          ],
+          [
+            "a / attic",
+            1
+          ],
+          [
+            "c / corridor",
+            1
+          ]
+        ]
+      },
+      "banheiro_churrasqueira": {
+        "count": 3,
+        "top1_match": 3,
+        "top5_match": 3,
+        "top1_accuracy": 1.0,
+        "top5_accuracy": 1.0,
+        "most_common_top1_predictions": [
+          [
+            "b / bathroom",
+            3
+          ]
+        ]
+      },
+      "churrasqueira": {
+        "count": 12,
+        "top1_match": 1,
+        "top5_match": 6,
+        "top1_accuracy": 0.08333333333333333,
+        "top5_accuracy": 0.5,
+        "most_common_top1_predictions": [
+          [
+            "a / attic",
+            3
+          ],
+          [
+            "a / alcove",
+            3
+          ],
+          [
+            "b / burial chamber",
+            1
+          ],
+          [
+            "p / porch",
+            1
+          ],
+          [
+            "g / gazebo / exterior",
+            1
+          ],
+          [
+            "m / mezzanine",
+            1
+          ],
+          [
+            "k / kitchen",
+            1
+          ],
+          [
+            "w / wet bar",
+            1
+          ]
+        ]
+      },
+      "corredor": {
+        "count": 14,
+        "top1_match": 8,
+        "top5_match": 11,
+        "top1_accuracy": 0.5714285714285714,
+        "top5_accuracy": 0.7857142857142857,
+        "most_common_top1_predictions": [
+          [
+            "c / corridor",
+            8
+          ],
+          [
+            "e / elevator / door",
+            2
+          ],
+          [
+            "e / entrance hall",
+            2
+          ],
+          [
+            "p / porch",
+            1
+          ],
+          [
+            "a / artists loft",
+            1
+          ]
+        ]
+      },
+      "corredor_garagem": {
+        "count": 1,
+        "top1_match": 1,
+        "top5_match": 1,
+        "top1_accuracy": 1.0,
+        "top5_accuracy": 1.0,
+        "most_common_top1_predictions": [
+          [
+            "c / corridor",
+            1
+          ]
+        ]
+      },
+      "cozinha": {
+        "count": 67,
+        "top1_match": 42,
+        "top5_match": 60,
+        "top1_accuracy": 0.6268656716417911,
+        "top5_accuracy": 0.8955223880597015,
+        "most_common_top1_predictions": [
+          [
+            "k / kitchen",
+            42
+          ],
+          [
+            "w / wet bar",
+            5
+          ],
+          [
+            "g / galley",
+            4
+          ],
+          [
+            "y / youth hostel",
+            3
+          ],
+          [
+            "r / reception",
+            2
+          ],
+          [
+            "s / server room",
+            2
+          ],
+          [
+            "z / zen garden",
+            1
+          ],
+          [
+            "c / childs room",
+            1
+          ],
+          [
+            "d / dining room",
+            1
+          ],
+          [
+            "p / playroom",
+            1
+          ]
+        ]
+      },
+      "cozinha_area_servico": {
+        "count": 6,
+        "top1_match": 4,
+        "top5_match": 6,
+        "top1_accuracy": 0.6666666666666666,
+        "top5_accuracy": 1.0,
+        "most_common_top1_predictions": [
+          [
+            "k / kitchen",
+            2
+          ],
+          [
+            "c / clean room",
+            2
+          ],
+          [
+            "u / utility room",
+            2
+          ]
+        ]
+      },
+      "escritorio": {
+        "count": 8,
+        "top1_match": 1,
+        "top5_match": 3,
+        "top1_accuracy": 0.125,
+        "top5_accuracy": 0.375,
+        "most_common_top1_predictions": [
+          [
+            "u / utility room",
+            2
+          ],
+          [
+            "l / locker room",
+            1
+          ],
+          [
+            "o / office",
+            1
+          ],
+          [
+            "b / basement",
+            1
+          ],
+          [
+            "b / bathroom",
+            1
+          ],
+          [
+            "s / shower",
+            1
+          ],
+          [
+            "c / closet",
+            1
+          ]
+        ]
+      },
+      "garagem": {
+        "count": 32,
+        "top1_match": 16,
+        "top5_match": 25,
+        "top1_accuracy": 0.5,
+        "top5_accuracy": 0.78125,
+        "most_common_top1_predictions": [
+          [
+            "g / garage / indoor",
+            14
+          ],
+          [
+            "c / corridor",
+            4
+          ],
+          [
+            "b / basement",
+            3
+          ],
+          [
+            "a / artists loft",
+            2
+          ],
+          [
+            "m / mezzanine",
+            2
+          ],
+          [
+            "c / closet",
+            1
+          ],
+          [
+            "p / parking garage / indoor",
+            1
+          ],
+          [
+            "m / medina",
+            1
+          ],
+          [
+            "a / alley",
+            1
+          ],
+          [
+            "d / driveway",
+            1
+          ]
+        ]
+      },
+      "jardim": {
+        "count": 11,
+        "top1_match": 0,
+        "top5_match": 6,
+        "top1_accuracy": 0.0,
+        "top5_accuracy": 0.5454545454545454,
+        "most_common_top1_predictions": [
+          [
+            "s / swimming pool / indoor",
+            3
+          ],
+          [
+            "e / elevator lobby",
+            2
+          ],
+          [
+            "o / orchard",
+            1
+          ],
+          [
+            "r / roof garden",
+            1
+          ],
+          [
+            "w / waiting room",
+            1
+          ],
+          [
+            "a / alcove",
+            1
+          ],
+          [
+            "a / atrium / public",
+            1
+          ],
+          [
+            "s / swimming pool / outdoor",
+            1
+          ]
+        ]
+      },
+      "piscina": {
+        "count": 4,
+        "top1_match": 1,
+        "top5_match": 2,
+        "top1_accuracy": 0.25,
+        "top5_accuracy": 0.5,
+        "most_common_top1_predictions": [
+          [
+            "r / railroad track",
+            1
+          ],
+          [
+            "c / construction site",
+            1
+          ],
+          [
+            "j / jacuzzi / indoor",
+            1
+          ],
+          [
+            "s / swimming pool / indoor",
+            1
+          ]
+        ]
+      },
+      "quarto": {
+        "count": 201,
+        "top1_match": 75,
+        "top5_match": 145,
+        "top1_accuracy": 0.373134328358209,
+        "top5_accuracy": 0.7213930348258707,
+        "most_common_top1_predictions": [
+          [
+            "b / bedroom",
+            62
+          ],
+          [
+            "y / youth hostel",
+            25
+          ],
+          [
+            "d / dorm room",
+            13
+          ],
+          [
+            "c / closet",
+            12
+          ],
+          [
+            "a / alcove",
+            9
+          ],
+          [
+            "l / locker room",
+            6
+          ],
+          [
+            "t / television room",
+            6
+          ],
+          [
+            "h / hotel room",
+            6
+          ],
+          [
+            "c / childs room",
+            5
+          ],
+          [
+            "n / nursery",
+            5
+          ]
+        ]
+      },
+      "quarto_banheiro": {
+        "count": 54,
+        "top1_match": 43,
+        "top5_match": 52,
+        "top1_accuracy": 0.7962962962962963,
+        "top5_accuracy": 0.9629629629629629,
+        "most_common_top1_predictions": [
+          [
+            "b / bathroom",
+            31
+          ],
+          [
+            "s / shower",
+            12
+          ],
+          [
+            "j / jacuzzi / indoor",
+            2
+          ],
+          [
+            "l / laundromat",
+            1
+          ],
+          [
+            "l / locker room",
+            1
+          ],
+          [
+            "s / sauna",
+            1
+          ],
+          [
+            "p / physics laboratory",
+            1
+          ],
+          [
+            "e / elevator / door",
+            1
+          ],
+          [
+            "c / closet",
+            1
+          ],
+          [
+            "u / utility room",
+            1
+          ]
+        ]
+      },
+      "quarto_closet": {
+        "count": 4,
+        "top1_match": 4,
+        "top5_match": 4,
+        "top1_accuracy": 1.0,
+        "top5_accuracy": 1.0,
+        "most_common_top1_predictions": [
+          [
+            "c / closet",
+            4
+          ]
+        ]
+      },
+      "quarto_varanda": {
+        "count": 20,
+        "top1_match": 7,
+        "top5_match": 10,
+        "top1_accuracy": 0.35,
+        "top5_accuracy": 0.5,
+        "most_common_top1_predictions": [
+          [
+            "b / balcony / interior",
+            7
+          ],
+          [
+            "c / closet",
+            4
+          ],
+          [
+            "c / construction site",
+            2
+          ],
+          [
+            "v / village",
+            1
+          ],
+          [
+            "r / roof garden",
+            1
+          ],
+          [
+            "k / kennel / outdoor",
+            1
+          ],
+          [
+            "m / mezzanine",
+            1
+          ],
+          [
+            "g / galley",
+            1
+          ],
+          [
+            "c / courtyard",
+            1
+          ],
+          [
+            "f / fire escape",
+            1
+          ]
+        ]
+      },
+      "sala": {
+        "count": 130,
+        "top1_match": 59,
+        "top5_match": 100,
+        "top1_accuracy": 0.45384615384615384,
+        "top5_accuracy": 0.7692307692307693,
+        "most_common_top1_predictions": [
+          [
+            "d / dining room",
+            25
+          ],
+          [
+            "t / television room",
+            20
+          ],
+          [
+            "l / living room",
+            14
+          ],
+          [
+            "w / waiting room",
+            13
+          ],
+          [
+            "a / artists loft",
+            10
+          ],
+          [
+            "e / entrance hall",
+            9
+          ],
+          [
+            "m / mezzanine",
+            4
+          ],
+          [
+            "c / conference room",
+            4
+          ],
+          [
+            "a / attic",
+            3
+          ],
+          [
+            "e / elevator lobby",
+            3
+          ]
+        ]
+      },
+      "sala_varanda": {
+        "count": 12,
+        "top1_match": 9,
+        "top5_match": 12,
+        "top1_accuracy": 0.75,
+        "top5_accuracy": 1.0,
+        "most_common_top1_predictions": [
+          [
+            "b / balcony / interior",
+            9
+          ],
+          [
+            "r / roof garden",
+            1
+          ],
+          [
+            "s / staircase",
+            1
+          ],
+          [
+            "b / bow window / indoor",
+            1
+          ]
+        ]
+      },
+      "varanda": {
+        "count": 16,
+        "top1_match": 8,
+        "top5_match": 11,
+        "top1_accuracy": 0.5,
+        "top5_accuracy": 0.6875,
+        "most_common_top1_predictions": [
+          [
+            "b / balcony / interior",
+            5
+          ],
+          [
+            "b / balcony / exterior",
+            2
+          ],
+          [
+            "f / fire escape",
+            2
+          ],
+          [
+            "b / beach house",
+            1
+          ],
+          [
+            "m / medina",
+            1
+          ],
+          [
+            "g / gas station",
+            1
+          ],
+          [
+            "c / corridor",
+            1
+          ],
+          [
+            "v / village",
+            1
+          ],
+          [
+            "p / porch",
+            1
+          ],
+          [
+            "h / harbor",
+            1
+          ]
+        ]
+      },
+      "varanda_area_servico": {
+        "count": 5,
+        "top1_match": 4,
+        "top5_match": 5,
+        "top1_accuracy": 0.8,
+        "top5_accuracy": 1.0,
+        "most_common_top1_predictions": [
+          [
+            "u / utility room",
+            4
+          ],
+          [
+            "k / kitchen",
+            1
+          ]
+        ]
+      }
+    }
+  }
+}

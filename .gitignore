@@ -160,3 +160,7 @@ cython_debug/
 #.idea/
 
 places365_data/
+
+# Generated external validation artifacts
+data/external/quintoandar/images/
+docs/
